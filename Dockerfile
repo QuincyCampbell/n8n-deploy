@@ -3,8 +3,8 @@ FROM n8nio/n8n:latest
 # Switch to root to install utilities
 USER root
 
-# Install jq (curl is already included in n8n image)
-RUN apk add --no-cache jq
+# Install jq and bash (curl is already included in n8n image)
+RUN apk add --no-cache jq bash
 
 # Create workflow directories and fix ownership
 RUN mkdir -p /opt/n8n/.n8n/workflows \
@@ -19,6 +19,29 @@ COPY --chown=node:node workflows/ /tmp/workflows/
 COPY --chown=node:node scripts/import-workflows.sh /usr/local/bin/import-workflows.sh
 RUN chmod +x /usr/local/bin/import-workflows.sh
 
+# Create a unified startup script that handles both import and n8n startup
+RUN cat > /usr/local/bin/startup.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Starting n8n with workflow import..."
+
+# Run the import script first
+echo "📦 Running workflow import script..."
+if [ -f "/usr/local/bin/import-workflows.sh" ]; then
+    /usr/local/bin/import-workflows.sh || echo "⚠️ Import script completed with warnings"
+else
+    echo "📝 No import script found"
+fi
+
+# Start n8n
+echo "🎯 Starting n8n server..."
+exec /usr/local/bin/n8n start
+EOF
+
+RUN chmod +x /usr/local/bin/startup.sh
+RUN chown node:node /usr/local/bin/startup.sh
+
 # Switch back to node user
 USER node
 
@@ -31,7 +54,5 @@ ENV PATH="/usr/local/bin:$PATH"
 # Expose port
 EXPOSE 5678
 
-# Run import script first, then start n8n
-ENTRYPOINT ["/usr/local/bin/import-workflows.sh"]
-CMD ["sh", "-c", "/usr/local/bin/import-workflows.sh && exec n8n start"]
-
+# Use single command to avoid conflicts
+CMD ["/usr/local/bin/startup.sh"]
