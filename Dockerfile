@@ -33,4 +33,5 @@ EXPOSE 5678
 
 # Run import script first, then start n8n
 ENTRYPOINT ["/usr/local/bin/import-workflows.sh"]
-CMD ["n8n", "start"]
+CMD ["sh", "-c", "/usr/local/bin/import-workflows.sh && exec n8n start"]
+
