@@ -52,6 +52,8 @@ RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
     echo 'echo "🎯 Starting n8n..."' >> /docker-entrypoint-custom.sh && \
     echo 'echo "=================================================="' >> /docker-entrypoint-custom.sh && \
     echo 'exec n8n start "$@"' >> /docker-entrypoint-custom.sh
+    echo 'echo "📥 Importing workflows..."' >> /docker-entrypoint-custom.sh
+    echo 'n8n import:workflow --input=/tmp/workflows-source --overwrite || echo "❌ Workflow import failed"' >> /docker-entrypoint-custom.sh
 
 # Make script executable
 RUN chmod +x /docker-entrypoint-custom.sh
