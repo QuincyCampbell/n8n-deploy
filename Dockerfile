@@ -61,6 +61,6 @@ ENV PATH="/usr/local/bin:$PATH"
 # Expose port
 EXPOSE 5678
 
-# Use the startup script
-CMD ["/bin/sh", "-c", "/home/node/import-workflows.sh && exec n8n start"]
+# Use the startup script with bash
+CMD ["/bin/bash", "-c", "/usr/local/bin/import-workflows.sh && exec n8n start"]
 
