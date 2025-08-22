@@ -8,11 +8,38 @@ services:
     autoDeploy: true
     dockerfilePath: ./Dockerfile
     envVars:
-      - key: N8N_PORT
-        value: 5678
+      # Basic Auth (you have these)
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
         value: "admin"
       - key: N8N_BASIC_AUTH_PASSWORD
         value: "Green126"
+      
+      # Core n8n settings
+      - key: N8N_PORT
+        value: "5678"
+      - key: N8N_HOST
+        value: "0.0.0.0"
+      - key: N8N_PROTOCOL
+        value: "https"
+      - key: N8N_EDITOR_BASE_URL
+        value: "https://n8n-deploy-xv1b.onrender.com"
+      
+      # Persistence settings
+      - key: N8N_USER_FOLDER
+        value: "/home/node/.n8n"
+      - key: DB_TYPE
+        value: "sqlite"
+      - key: DB_SQLITE_DATABASE
+        value: "/home/node/.n8n/database.sqlite"
+      
+      # Security
+      - key: N8N_ENCRYPTION_KEY
+        value: "your-32-char-encryption-key-here-change-this"
+      
+      # Disable problematic features for free tier
+      - key: N8N_RUNNERS_ENABLED
+        value: "false"
+      - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
+        value: "false"
