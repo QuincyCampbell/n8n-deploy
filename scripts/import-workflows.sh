@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/bin/sh
+
 
 echo "🚀 Starting N8N with workflow auto-import..."
 
