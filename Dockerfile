@@ -20,27 +20,24 @@ COPY --chown=node:node scripts/import-workflows.sh /usr/local/bin/import-workflo
 RUN chmod +x /usr/local/bin/import-workflows.sh
 
 # Create a unified startup script that handles both import and n8n startup
-RUN cat > /usr/local/bin/startup.sh << 'EOF'
-#!/bin/bash
-set -e
-
-echo "🚀 Starting n8n with workflow import..."
-
-# Run the import script first
-echo "📦 Running workflow import script..."
-if [ -f "/usr/local/bin/import-workflows.sh" ]; then
-    /usr/local/bin/import-workflows.sh || echo "⚠️ Import script completed with warnings"
-else
-    echo "📝 No import script found"
-fi
-
-# Start n8n
-echo "🎯 Starting n8n server..."
-exec /usr/local/bin/n8n start
-EOF
-
-RUN chmod +x /usr/local/bin/startup.sh
-RUN chown node:node /usr/local/bin/startup.sh
+RUN echo '#!/bin/bash' > /usr/local/bin/startup.sh && \
+    echo 'set -e' >> /usr/local/bin/startup.sh && \
+    echo '' >> /usr/local/bin/startup.sh && \
+    echo 'echo "🚀 Starting n8n with workflow import..."' >> /usr/local/bin/startup.sh && \
+    echo '' >> /usr/local/bin/startup.sh && \
+    echo '# Run the import script first' >> /usr/local/bin/startup.sh && \
+    echo 'echo "📦 Running workflow import script..."' >> /usr/local/bin/startup.sh && \
+    echo 'if [ -f "/usr/local/bin/import-workflows.sh" ]; then' >> /usr/local/bin/startup.sh && \
+    echo '    /usr/local/bin/import-workflows.sh || echo "⚠️ Import script completed with warnings"' >> /usr/local/bin/startup.sh && \
+    echo 'else' >> /usr/local/bin/startup.sh && \
+    echo '    echo "📝 No import script found"' >> /usr/local/bin/startup.sh && \
+    echo 'fi' >> /usr/local/bin/startup.sh && \
+    echo '' >> /usr/local/bin/startup.sh && \
+    echo '# Start n8n' >> /usr/local/bin/startup.sh && \
+    echo 'echo "🎯 Starting n8n server..."' >> /usr/local/bin/startup.sh && \
+    echo 'exec /usr/local/bin/n8n start' >> /usr/local/bin/startup.sh && \
+    chmod +x /usr/local/bin/startup.sh && \
+    chown node:node /usr/local/bin/startup.sh
 
 # Switch back to node user
 USER node
