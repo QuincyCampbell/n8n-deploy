@@ -11,80 +11,44 @@ RUN mkdir -p /opt/n8n/.n8n/workflows && \
     mkdir -p /tmp/workflows-source && \
     chown -R node:node /opt/n8n/.n8n
 
-# Copy ALL files from workflows directory (not just JSON)
+# Copy ALL files from workflows directory
 COPY workflows/ /tmp/workflows-source/
 
-# Create a comprehensive startup script that handles multiple scenarios
-RUN cat > /docker-entrypoint-custom.sh << 'SCRIPT_END'
-#!/bin/bash
-set -e
-
-echo "🚀 Custom n8n Startup"
-echo "📊 Environment Check:"
-echo "   - User: $(whoami)"
-echo "   - N8N_USER_FOLDER: ${N8N_USER_FOLDER}"
-echo "   - Current directory: $(pwd)"
-
-# Function to safely copy workflows
-copy_workflows() {
-    echo "🔍 Looking for workflows to import..."
-    
-    # Check source directory
-    if [ ! -d "/tmp/workflows-source" ]; then
-        echo "❌ No source workflows directory found"
-        return 0
-    fi
-    
-    echo "📁 Source directory contents:"
-    ls -la /tmp/workflows-source/ || echo "Cannot list source directory"
-    
-    # Create target directory
-    mkdir -p /opt/n8n/.n8n/workflows
-    chown -R node:node /opt/n8n/.n8n
-    
-    # Count JSON files
-    JSON_COUNT=$(find /tmp/workflows-source -name "*.json" -type f 2>/dev/null | wc -l)
-    echo "📦 Found $JSON_COUNT JSON files"
-    
-    if [ "$JSON_COUNT" -gt 0 ]; then
-        echo "📥 Copying workflow files..."
-        
-        # Copy each JSON file
-        find /tmp/workflows-source -name "*.json" -type f | while read -r workflow; do
-            filename=$(basename "$workflow")
-            echo "   - Copying: $filename"
-            
-            # Validate JSON before copying
-            if jq empty "$workflow" 2>/dev/null; then
-                cp "$workflow" "/opt/n8n/.n8n/workflows/" && \
-                echo "     ✅ Successfully copied: $filename" || \
-                echo "     ❌ Failed to copy: $filename"
-            else
-                echo "     ⚠️  Invalid JSON, skipping: $filename"
-            fi
-        done
-        
-        # Fix ownership
-        chown -R node:node /opt/n8n/.n8n/workflows/
-        
-        echo "📋 Final workflow directory contents:"
-        ls -la /opt/n8n/.n8n/workflows/ || echo "Cannot list target directory"
-        
-        echo "🎉 Workflow copy completed!"
-    else
-        echo "📝 No JSON workflow files found to import"
-    fi
-}
-
-# Copy workflows before starting n8n
-copy_workflows
-
-echo "🎯 Starting n8n..."
-echo "=================================================="
-
-# Switch to node user and start n8n
-exec gosu node n8n start "$@"
-SCRIPT_END
+# Create startup script using echo method (avoid heredoc issues)
+RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
+    echo 'set -e' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "🚀 Custom n8n Startup"' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "📊 Environment Check:"' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "   - User: $(whoami)"' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "   - N8N_USER_FOLDER: ${N8N_USER_FOLDER}"' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "🔍 Looking for workflows to import..."' >> /docker-entrypoint-custom.sh && \
+    echo 'if [ ! -d "/tmp/workflows-source" ]; then' >> /docker-entrypoint-custom.sh && \
+    echo '    echo "❌ No source workflows directory found"' >> /docker-entrypoint-custom.sh && \
+    echo 'else' >> /docker-entrypoint-custom.sh && \
+    echo '    echo "📁 Source directory contents:"' >> /docker-entrypoint-custom.sh && \
+    echo '    ls -la /tmp/workflows-source/ || echo "Cannot list source"' >> /docker-entrypoint-custom.sh && \
+    echo '    mkdir -p /opt/n8n/.n8n/workflows' >> /docker-entrypoint-custom.sh && \
+    echo '    chown -R node:node /opt/n8n/.n8n' >> /docker-entrypoint-custom.sh && \
+    echo '    JSON_COUNT=$(find /tmp/workflows-source -name "*.json" -type f 2>/dev/null | wc -l)' >> /docker-entrypoint-custom.sh && \
+    echo '    echo "📦 Found $JSON_COUNT JSON files"' >> /docker-entrypoint-custom.sh && \
+    echo '    if [ "$JSON_COUNT" -gt 0 ]; then' >> /docker-entrypoint-custom.sh && \
+    echo '        echo "📥 Copying workflow files..."' >> /docker-entrypoint-custom.sh && \
+    echo '        find /tmp/workflows-source -name "*.json" -type f | while read workflow; do' >> /docker-entrypoint-custom.sh && \
+    echo '            filename=$(basename "$workflow")' >> /docker-entrypoint-custom.sh && \
+    echo '            echo "   - Copying: $filename"' >> /docker-entrypoint-custom.sh && \
+    echo '            cp "$workflow" "/opt/n8n/.n8n/workflows/" && echo "     ✅ Copied: $filename" || echo "     ❌ Failed: $filename"' >> /docker-entrypoint-custom.sh && \
+    echo '        done' >> /docker-entrypoint-custom.sh && \
+    echo '        chown -R node:node /opt/n8n/.n8n/workflows/' >> /docker-entrypoint-custom.sh && \
+    echo '        echo "📋 Final workflow directory:"' >> /docker-entrypoint-custom.sh && \
+    echo '        ls -la /opt/n8n/.n8n/workflows/ || echo "Cannot list target"' >> /docker-entrypoint-custom.sh && \
+    echo '        echo "🎉 Workflow copy completed!"' >> /docker-entrypoint-custom.sh && \
+    echo '    else' >> /docker-entrypoint-custom.sh && \
+    echo '        echo "📝 No JSON workflow files found"' >> /docker-entrypoint-custom.sh && \
+    echo '    fi' >> /docker-entrypoint-custom.sh && \
+    echo 'fi' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "🎯 Starting n8n..."' >> /docker-entrypoint-custom.sh && \
+    echo 'echo "=================================================="' >> /docker-entrypoint-custom.sh && \
+    echo 'exec gosu node n8n start "$@"' >> /docker-entrypoint-custom.sh
 
 # Make script executable
 RUN chmod +x /docker-entrypoint-custom.sh
