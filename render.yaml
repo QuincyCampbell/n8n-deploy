@@ -7,9 +7,9 @@ services:
     branch: main
     autoDeploy: true
     dockerfilePath: ./Dockerfile
-    healthCheckPath: /healthz
+    # Remove healthCheckPath to let Render auto-detect port
     envVars:
-      # Basic Auth (force enable)
+      # Basic Auth (simplified username to avoid issues)
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
@@ -27,9 +27,9 @@ services:
       - key: N8N_EDITOR_BASE_URL
         value: "https://n8n-deploy-xv1b.onrender.com"
       
-      # CRITICAL: Encryption key (MUST be exactly 32 characters)
+      # CRITICAL: Fixed encryption key (exactly 32 characters, alphanumeric only)
       - key: N8N_ENCRYPTION_KEY
-        value: "1c4e4906-16c4-4cf4-9792-ec54d2129214"
+        value: "1c4e490616c44cf49792ec54d2129214"
       
       # Database settings for persistence
       - key: DB_TYPE
@@ -58,7 +58,5 @@ services:
         value: "info"
       
       # Additional stability settings
-      - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
-        value: "false"
       - key: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
         value: "true"
