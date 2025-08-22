@@ -3,7 +3,7 @@ FROM n8nio/n8n:latest
 # Switch to root to create directories and install dependencies
 USER root
 
-# Install curl for potential API calls (keep it simple)
+# Install curl for health checks (if needed later)
 RUN apk add --no-cache curl
 
 # Create necessary directories for persistence
@@ -12,7 +12,7 @@ RUN mkdir -p /tmp/workflows
 RUN chown -R node:node /home/node/.n8n
 RUN chown -R node:node /tmp
 
-# Copy workflows to the n8n directory directly (simpler approach)
+# Copy workflow files directly to n8n's workflow directory
 COPY --chown=node:node workflows/ /home/node/.n8n/workflows/
 
 # Switch back to node user for security
@@ -26,5 +26,5 @@ ENV N8N_PORT=5678
 # Expose port
 EXPOSE 5678
 
-# Just start n8n normally - no complex shell scripts
-CMD ["n8n", "start"]
+# Use the default entrypoint with "start" parameter
+CMD ["start"]
