@@ -3,39 +3,62 @@ FROM n8nio/n8n:latest
 # Switch to root to create directories and setup workflow copying
 USER root
 
+# Install jq for potential JSON processing
+RUN apk add --no-cache jq
+
 # Create directories with correct permissions
 RUN mkdir -p /opt/n8n/.n8n/workflows && \
     mkdir -p /tmp/workflows && \
     chown -R node:node /opt/n8n/.n8n && \
     chown -R node:node /tmp
 
-# Copy workflow files to temporary location
-COPY workflows/ /tmp/workflows/
+# Copy workflow files to temporary location (with fallback if directory doesn't exist)
+COPY workflows/ /tmp/workflows/ 2>/dev/null || true
+RUN chown -R node:node /tmp/workflows 2>/dev/null || true
 
-# Create a simple workflow copy script that runs BEFORE n8n starts
-RUN echo '#!/bin/sh' > /usr/local/bin/copy-workflows.sh && \
-    echo 'echo "📦 Copying workflows..."' >> /usr/local/bin/copy-workflows.sh && \
-    echo 'mkdir -p /opt/n8n/.n8n/workflows' >> /usr/local/bin/copy-workflows.sh && \
-    echo 'if [ -d "/tmp/workflows" ] && [ "$(ls -A /tmp/workflows 2>/dev/null || true)" ]; then' >> /usr/local/bin/copy-workflows.sh && \
-    echo '    cp /tmp/workflows/*.json /opt/n8n/.n8n/workflows/ 2>/dev/null || echo "No JSON files to copy"' >> /usr/local/bin/copy-workflows.sh && \
-    echo '    echo "✅ Workflows copied"' >> /usr/local/bin/copy-workflows.sh && \
-    echo 'else' >> /usr/local/bin/copy-workflows.sh && \
-    echo '    echo "📝 No workflows found to copy"' >> /usr/local/bin/copy-workflows.sh && \
-    echo 'fi' >> /usr/local/bin/copy-workflows.sh && \
-    chmod +x /usr/local/bin/copy-workflows.sh
+# Create a robust workflow copy script
+RUN cat > /usr/local/bin/copy-workflows.sh << 'EOF'
+#!/bin/sh
+set -e
 
-# Create a custom docker-entrypoint.sh that copies workflows then calls the original
-RUN echo '#!/bin/sh' > /docker-entrypoint-custom.sh && \
-    echo 'set -e' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "🚀 n8n Custom Entrypoint"' >> /docker-entrypoint-custom.sh && \
-    echo '' >> /docker-entrypoint-custom.sh && \
-    echo '# Copy workflows first' >> /docker-entrypoint-custom.sh && \
-    echo '/usr/local/bin/copy-workflows.sh' >> /docker-entrypoint-custom.sh && \
-    echo '' >> /docker-entrypoint-custom.sh && \
-    echo '# Start n8n normally' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "🎯 Starting n8n..."' >> /docker-entrypoint-custom.sh && \
-    echo 'exec n8n start "$@"' >> /docker-entrypoint-custom.sh && \
-    chmod +x /docker-entrypoint-custom.sh
+echo "🚀 n8n Custom Entrypoint"
+echo "📊 Debug info:"
+echo "   - Current user: $(whoami)"
+echo "   - N8N_USER_FOLDER: ${N8N_USER_FOLDER}"
+echo "   - Workflows temp dir: /tmp/workflows"
+echo "   - Target workflows dir: /opt/n8n/.n8n/workflows"
+
+# Ensure target directory exists
+mkdir -p /opt/n8n/.n8n/workflows
+
+echo "📦 Copying workflows..."
+
+# Check if source directory exists and has files
+if [ -d "/tmp/workflows" ]; then
+    WORKFLOW_COUNT=$(find /tmp/workflows -name "*.json" -type f 2>/dev/null | wc -l)
+    echo "   - Found ${WORKFLOW_COUNT} JSON files in /tmp/workflows"
+    
+    if [ "$WORKFLOW_COUNT" -gt 0 ]; then
+        echo "   - Copying workflow files..."
+        cp /tmp/workflows/*.json /opt/n8n/.n8n/workflows/ 2>/dev/null || echo "   - Warning: Failed to copy some files"
+        
+        # List what was copied
+        echo "   - Files in target directory:"
+        ls -la /opt/n8n/.n8n/workflows/ 2>/dev/null || echo "   - Cannot list target directory"
+        
+        echo "✅ Workflows copied successfully"
+    else
+        echo "📝 No JSON workflow files found to copy"
+    fi
+else
+    echo "📝 No workflows directory found"
+fi
+
+echo "🎯 Starting n8n..."
+EOF
+
+# Make the script executable
+RUN chmod +x /usr/local/bin/copy-workflows.sh
 
 # Switch back to node user
 USER node
@@ -48,5 +71,5 @@ ENV N8N_PORT=5678
 # Expose port
 EXPOSE 5678
 
-# Use our custom entrypoint
-ENTRYPOINT ["/docker-entrypoint-custom.sh"]
+# Use a combined approach: copy workflows then start n8n
+CMD ["/bin/sh", "-c", "/usr/local/bin/copy-workflows.sh && exec n8n start"]
