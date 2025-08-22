@@ -12,9 +12,9 @@ services:
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
-        value: "admin"
+        value: "Quincy Campbell"
       - key: N8N_BASIC_AUTH_PASSWORD
-        value: "Green126"
+        value: "Green126!"
       
       # Core n8n settings
       - key: N8N_PORT
@@ -26,20 +26,28 @@ services:
       - key: N8N_EDITOR_BASE_URL
         value: "https://n8n-deploy-xv1b.onrender.com"
       
-      # Persistence settings
-      - key: N8N_USER_FOLDER
-        value: "/home/node/.n8n"
+      # CRITICAL: Encryption key (MUST be exactly 32 characters)
+      - key: N8N_ENCRYPTION_KEY
+        value: "1c4e4906-16c4-4cf4-9792-ec54d2129214"
+      
+      # Database settings for persistence  
       - key: DB_TYPE
         value: "sqlite"
       - key: DB_SQLITE_DATABASE
         value: "/home/node/.n8n/database.sqlite"
       
-      # Security
-      - key: N8N_ENCRYPTION_KEY
-        value: "your-32-char-encryption-key-here-change-this"
+      # User folder for persistence
+      - key: N8N_USER_FOLDER
+        value: "/home/node/.n8n"
       
-      # Disable problematic features for free tier
+      # Disable features that may cause issues on free tier
       - key: N8N_RUNNERS_ENABLED
         value: "false"
       - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
         value: "false"
+      - key: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+        value: "false"
+      
+      # Logging
+      - key: N8N_LOG_LEVEL
+        value: "info"
