@@ -3,16 +3,17 @@ FROM n8nio/n8n:latest
 # Switch to root for setup
 USER root
 
-# Install debugging tools
-RUN apk add --no-cache bash curl jq
+# Install debugging tools and gosu
+RUN apk add --no-cache bash curl jq gosu
 
 # Create all necessary directories
 RUN mkdir -p /opt/n8n/.n8n/workflows && \
     mkdir -p /tmp/workflows-source && \
     chown -R node:node /opt/n8n/.n8n
 
-# Copy ALL files from workflows directory
-COPY workflows/ /tmp/workflows-source/
+# Copy ALL files from workflows directory (with better permissions)
+COPY --chown=node:node workflows/ /tmp/workflows-source/
+RUN chmod -R 755 /tmp/workflows-source/
 
 # Create startup script using echo method (avoid heredoc issues)
 RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
@@ -24,6 +25,8 @@ RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
     echo 'echo "🔍 Looking for workflows to import..."' >> /docker-entrypoint-custom.sh && \
     echo 'if [ ! -d "/tmp/workflows-source" ]; then' >> /docker-entrypoint-custom.sh && \
     echo '    echo "❌ No source workflows directory found"' >> /docker-entrypoint-custom.sh && \
+    echo '    echo "🐛 Debug: Checking what exists in /tmp/"' >> /docker-entrypoint-custom.sh && \
+    echo '    ls -la /tmp/ || echo "Cannot list /tmp/"' >> /docker-entrypoint-custom.sh && \
     echo 'else' >> /docker-entrypoint-custom.sh && \
     echo '    echo "📁 Source directory contents:"' >> /docker-entrypoint-custom.sh && \
     echo '    ls -la /tmp/workflows-source/ || echo "Cannot list source"' >> /docker-entrypoint-custom.sh && \
