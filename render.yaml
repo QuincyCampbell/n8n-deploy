@@ -7,8 +7,9 @@ services:
     branch: main
     autoDeploy: true
     dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
     envVars:
-      # Basic Auth (you have these)
+      # Basic Auth (force enable)
       - key: N8N_BASIC_AUTH_ACTIVE
         value: "true"
       - key: N8N_BASIC_AUTH_USER
@@ -30,29 +31,33 @@ services:
       - key: N8N_ENCRYPTION_KEY
         value: "1c4e4906-16c4-4cf4-9792-ec54d2129214"
       
-      # Database settings for persistence  
+      # Database settings for persistence
       - key: DB_TYPE
         value: "sqlite"
       - key: DB_SQLITE_DATABASE
-        value: "/home/node/.n8n/database.sqlite"
+        value: "/opt/n8n/.n8n/database.sqlite"
       
       # User folder for persistence
       - key: N8N_USER_FOLDER
-        value: "/home/node/.n8n"
+        value: "/opt/n8n/.n8n"
       
-      # Disable features that may cause issues on free tier
+      # Performance and compatibility settings
       - key: N8N_RUNNERS_ENABLED
         value: "false"
       - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
         value: "false"
       - key: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
         value: "false"
+      - key: N8N_DISABLE_UI
+        value: "false"
+      - key: NODE_ENV
+        value: "production"
       
       # Logging
       - key: N8N_LOG_LEVEL
         value: "info"
-
-        # Additional stability settings
+      
+      # Additional stability settings
       - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
         value: "false"
       - key: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
