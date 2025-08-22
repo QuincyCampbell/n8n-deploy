@@ -51,7 +51,7 @@ RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
     echo 'fi' >> /docker-entrypoint-custom.sh && \
     echo 'echo "🎯 Starting n8n..."' >> /docker-entrypoint-custom.sh && \
     echo 'echo "=================================================="' >> /docker-entrypoint-custom.sh && \
-    echo 'exec gosu node n8n start "$@"' >> /docker-entrypoint-custom.sh
+    echo 'exec n8n start "$@"' >> /docker-entrypoint-custom.sh
 
 # Make script executable
 RUN chmod +x /docker-entrypoint-custom.sh
