@@ -3,22 +3,17 @@ FROM n8nio/n8n:latest
 # Switch to root to create directories and install dependencies
 USER root
 
-# Install curl and jq for the import script
-RUN apk add --no-cache curl jq
+# Install curl for potential API calls (keep it simple)
+RUN apk add --no-cache curl
 
 # Create necessary directories for persistence
 RUN mkdir -p /home/node/.n8n/workflows
-RUN mkdir -p /home/node/.n8n/backups
 RUN mkdir -p /tmp/workflows
 RUN chown -R node:node /home/node/.n8n
 RUN chown -R node:node /tmp
 
-# Copy workflows to temporary location (if they exist)
-COPY --chown=node:node workflows/ /tmp/workflows/
-
-# Copy and setup the import script
-COPY --chown=node:node scripts/import-workflows.sh /home/node/import-workflows.sh
-RUN chmod +x /home/node/import-workflows.sh
+# Copy workflows to the n8n directory directly (simpler approach)
+COPY --chown=node:node workflows/ /home/node/.n8n/workflows/
 
 # Switch back to node user for security
 USER node
@@ -31,5 +26,5 @@ ENV N8N_PORT=5678
 # Expose port
 EXPOSE 5678
 
-# Fixed startup command - use bash instead of sh, and proper syntax
-CMD ["/bin/bash", "-c", "/home/node/import-workflows.sh & n8n start"]
+# Just start n8n normally - no complex shell scripts
+CMD ["n8n", "start"]
