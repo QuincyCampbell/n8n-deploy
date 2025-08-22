@@ -51,3 +51,9 @@ services:
       # Logging
       - key: N8N_LOG_LEVEL
         value: "info"
+
+        # Additional stability settings
+      - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
+        value: "false"
+      - key: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
+        value: "true"
