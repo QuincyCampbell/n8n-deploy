@@ -6,10 +6,10 @@ USER root
 # Install curl for health checks and bash
 RUN apk add --no-cache curl bash jq
 
-# Create necessary directories for persistence
-RUN mkdir -p /home/node/.n8n/workflows
+# Create necessary directories for persistence (using Render's expected paths)
+RUN mkdir -p /opt/n8n/.n8n/workflows
 RUN mkdir -p /tmp/workflows
-RUN chown -R node:node /home/node/.n8n
+RUN chown -R node:node /opt/n8n/.n8n
 RUN chown -R node:node /tmp
 
 # Copy workflow files to temporary location for import
@@ -22,8 +22,8 @@ RUN chmod +x /usr/local/bin/import-workflows.sh
 # Switch back to node user for security
 USER node
 
-# Set environment variables for persistence
-ENV N8N_USER_FOLDER=/home/node/.n8n
+# Set environment variables for persistence (matching Render's paths)
+ENV N8N_USER_FOLDER=/opt/n8n/.n8n
 ENV N8N_HOST=0.0.0.0
 ENV N8N_PORT=5678
 ENV PATH="/usr/local/bin:$PATH"
@@ -35,6 +35,9 @@ EXPOSE 5678
 RUN echo '#!/bin/bash' > /home/node/start.sh && \
     echo 'set -e' >> /home/node/start.sh && \
     echo 'echo "🚀 Starting n8n deployment..."' >> /home/node/start.sh && \
+    echo '' >> /home/node/start.sh && \
+    echo '# Ensure n8n directory exists' >> /home/node/start.sh && \
+    echo 'mkdir -p /opt/n8n/.n8n/workflows' >> /home/node/start.sh && \
     echo '' >> /home/node/start.sh && \
     echo '# Start n8n in background' >> /home/node/start.sh && \
     echo 'echo "📡 Starting n8n server..."' >> /home/node/start.sh && \
