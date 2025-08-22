@@ -62,4 +62,5 @@ ENV PATH="/usr/local/bin:$PATH"
 EXPOSE 5678
 
 # Use the startup script
-CMD ["/start.sh"]
+CMD ["/bin/bash", "-c", "/home/node/import-workflows.sh && exec n8n start"]
+
