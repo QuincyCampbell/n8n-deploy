@@ -26,5 +26,5 @@ ENV N8N_PORT=5678
 # Expose port
 EXPOSE 5678
 
-# Use the default entrypoint with "start" parameter
-CMD ["start"]
+# Use n8n start command explicitly 
+CMD ["n8n", "start"]
