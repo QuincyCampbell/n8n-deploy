@@ -1,0 +1,47 @@
+{
+  "name": "Hello World Test",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "f6b5e0c1-cc84-4f0f-8c6e-9f8b7a6d5e4c",
+      "name": "When clicking 'Test workflow'",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [720, 380]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "message",
+              "value": "Hello from n8n! This workflow was imported automatically."
+            }
+          ]
+        }
+      },
+      "id": "a1b2c3d4-e5f6-7890-1234-567890abcdef",
+      "name": "Set Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [920, 380]
+    }
+  ],
+  "connections": {
+    "When clicking 'Test workflow'": {
+      "main": [
+        [
+          {
+            "node": "Set Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {},
+  "createdAt": "2024-08-22T19:00:00.000Z",
+  "updatedAt": "2024-08-22T19:00:00.000Z"
+}
