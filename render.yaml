@@ -60,3 +60,9 @@ services:
       # Additional stability settings
       - key: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
         value: "true"
+    
+    # Persistent disk for n8n data (workflows, credentials, database)
+    disk:
+      name: n8n-data
+      mountPath: /opt/n8n/.n8n
+      sizeGB: 1
