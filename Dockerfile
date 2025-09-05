@@ -13,6 +13,7 @@ RUN mkdir -p /opt/n8n/.n8n/workflows && \
 
 # Copy workflow files into container
 COPY --chown=node:node workflows/ /tmp/workflows-source/
+RUN ls -la /tmp/workflows-source/ && echo "Files copied successfully"
 RUN chmod -R 755 /tmp/workflows-source/
 
 # Create custom entrypoint script
