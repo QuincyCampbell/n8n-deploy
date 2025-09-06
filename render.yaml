@@ -1,68 +1,15 @@
 services:
   - type: web
-    name: n8n
+    name: n8n-deploy
     env: docker
-    plan: free
-    region: oregon
-    branch: main
-    autoDeploy: true
     dockerfilePath: ./Dockerfile
-    # Remove healthCheckPath to let Render auto-detect port
-    envVars:
-      # Basic Auth (simplified username to avoid issues)
-      - key: N8N_BASIC_AUTH_ACTIVE
-        value: "true"
-      - key: N8N_BASIC_AUTH_USER
-        value: "Quincy Campbell"
-      - key: N8N_BASIC_AUTH_PASSWORD
-        value: "Green126!"
-      
-      # Core n8n settings
-      - key: N8N_PORT
-        value: "5678"
-      - key: N8N_HOST
-        value: "0.0.0.0"
-      - key: N8N_PROTOCOL
-        value: "https"
-      - key: N8N_EDITOR_BASE_URL
-        value: "https://n8n-deploy-xv1b.onrender.com"
-      
-      # CRITICAL: Fixed encryption key (exactly 32 characters, alphanumeric only)
-      - key: N8N_ENCRYPTION_KEY
-        value: "1c4e490616c44cf49792ec54d2129214"
-      
-      # Database settings for persistence
-      - key: DB_TYPE
-        value: "sqlite"
-      - key: DB_SQLITE_DATABASE
-        value: "/opt/n8n/.n8n/database.sqlite"
-      
-      # User folder for persistence
-      - key: N8N_USER_FOLDER
-        value: "/opt/n8n/.n8n"
-      
-      # Performance and compatibility settings
-      - key: N8N_RUNNERS_ENABLED
-        value: "false"
-      - key: N8N_DISABLE_PRODUCTION_MAIN_PROCESS
-        value: "false"
-      - key: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
-        value: "false"
-      - key: N8N_DISABLE_UI
-        value: "false"
-      - key: NODE_ENV
-        value: "production"
-      
-      # Logging
-      - key: N8N_LOG_LEVEL
-        value: "info"
-      
-      # Additional stability settings
-      - key: N8N_SKIP_WEBHOOK_DEREGISTRATION_SHUTDOWN
-        value: "true"
-    
-    # Persistent disk for n8n data (workflows, credentials, database)
+    healthCheckPath: /healthz
     disk:
       name: n8n-data
-      mountPath: /opt/n8n/.n8n
-      sizeGB: 1
+      mountPath: /home/node/.n8n
+      sizeGB: 10
+    # No environment variables - everything is in the secret file
+
+disks:
+  - name: n8n-data
+    sizeGB: 10
