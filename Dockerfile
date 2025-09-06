@@ -3,58 +3,45 @@ FROM n8nio/n8n:latest
 # Switch to root for setup
 USER root
 
-# Install debugging tools and gosu
-RUN apk add --no-cache bash curl jq gosu
+# Install debugging tools
+RUN apk add --no-cache bash curl jq
 
-# Create necessary directories
-RUN mkdir -p /opt/n8n/.n8n/workflows && \
+# Create necessary directories and set permissions
+RUN mkdir -p /home/node/.n8n/workflows && \
     mkdir -p /tmp/workflows-source && \
-    chown -R node:node /opt/n8n/.n8n
+    chown -R node:node /home/node/.n8n
 
-# Copy workflow files into container
-COPY --chown=node:node workflows/ /tmp/workflows-source/
-RUN ls -la /tmp/workflows-source/ && echo "Files copied successfully"
-RUN chmod -R 755 /tmp/workflows-source/
+# Copy workflow files if they exist
+COPY workflows/*.json /tmp/workflows-source/ 2>/dev/null || echo "No workflow files found"
+RUN chown -R node:node /tmp/workflows-source/ || true
 
-# Create custom entrypoint script
-RUN echo '#!/bin/bash' > /docker-entrypoint-custom.sh && \
-    echo 'set -e' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "🚀 Starting custom n8n entrypoint..."' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "📊 Environment:"' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "   - User: $(whoami)"' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "   - N8N_USER_FOLDER: ${N8N_USER_FOLDER}"' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "🔍 Checking for workflows to import..."' >> /docker-entrypoint-custom.sh && \
-    echo 'if [ -d "/tmp/workflows-source" ]; then' >> /docker-entrypoint-custom.sh && \
-    echo '    echo "📁 Source directory contents:"' >> /docker-entrypoint-custom.sh && \
-    echo '    ls -la /tmp/workflows-source/' >> /docker-entrypoint-custom.sh && \
-    echo '    JSON_COUNT=$(find /tmp/workflows-source -name "*.json" -type f | wc -l)' >> /docker-entrypoint-custom.sh && \
-    echo '    echo "📦 Found $JSON_COUNT JSON workflow files"' >> /docker-entrypoint-custom.sh && \
-    echo '    if [ "$JSON_COUNT" -gt 0 ]; then' >> /docker-entrypoint-custom.sh && \
-    echo '        echo "📥 Importing workflows..."' >> /docker-entrypoint-custom.sh && \
-    echo '        n8n import:workflow --input=/tmp/workflows-source --overwrite || echo "❌ Workflow import failed"' >> /docker-entrypoint-custom.sh && \
-    echo '    else' >> /docker-entrypoint-custom.sh && \
-    echo '        echo "📝 No workflows found to import"' >> /docker-entrypoint-custom.sh && \
-    echo '    fi' >> /docker-entrypoint-custom.sh && \
-    echo 'else' >> /docker-entrypoint-custom.sh && \
-    echo '    echo "❌ Source workflows directory not found!"' >> /docker-entrypoint-custom.sh && \
-    echo 'fi' >> /docker-entrypoint-custom.sh && \
-    echo 'echo "🎯 Starting n8n..."' >> /docker-entrypoint-custom.sh && \
-    echo 'exec n8n start "$@"' >> /docker-entrypoint-custom.sh
+# Create optimized entrypoint script
+RUN cat > /docker-entrypoint-custom.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "Starting n8n deployment..."
+
+# Import workflows if they exist
+if [ -d "/tmp/workflows-source" ] && [ "$(ls -A /tmp/workflows-source 2>/dev/null)" ]; then
+    echo "Importing workflows..."
+    gosu node n8n import:workflow --input=/tmp/workflows-source --overwrite || echo "Import failed, continuing..."
+else
+    echo "No workflows to import"
+fi
+
+echo "Starting n8n server..."
+exec gosu node n8n start
+EOF
 
 # Make script executable
 RUN chmod +x /docker-entrypoint-custom.sh
 
-# Switch back to node user
+# Switch back to node user for runtime
 USER node
 
-# Environment variables
-ENV N8N_USER_FOLDER=/opt/n8n/.n8n
-ENV N8N_HOST=0.0.0.0
-ENV N8N_PORT=5678
-ENV N8N_RUNNERS_ENABLED=true
-
-# Expose port
-EXPOSE 5678
+# Set working directory
+WORKDIR /home/node
 
 # Use custom entrypoint
 ENTRYPOINT ["/docker-entrypoint-custom.sh"]
