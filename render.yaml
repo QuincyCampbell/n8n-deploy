@@ -8,8 +8,41 @@ services:
       name: n8n-data
       mountPath: /home/node/.n8n
       sizeGB: 10
-    # No environment variables - everything is in the secret file
-
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: NODE_ENV
+        value: production
+      - key: N8N_HOST
+        value: 0.0.0.0
+      - key: N8N_PORT
+        value: "10000"
+      - key: N8N_PROTOCOL
+        value: https
+      - key: N8N_LOG_LEVEL
+        value: info
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: quincycampbell9@gmail.com
+      - key: N8N_TRUST_PROXY
+        value: "true"
+      - key: EXPRESS_TRUST_PROXY
+        value: "true"
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DB_TYPE
+        value: sqlite
+      - key: DB_SQLITE_DATABASE
+        value: /home/node/.n8n/database.sqlite
+      - key: N8N_USER_FOLDER
+        value: /home/node/.n8n
+      - key: GENERIC_TIMEZONE
+        value: America/New_York
+      - key: TZ
+        value: America/New_York
+      # Add sensitive vars through Render dashboard manually
+      
 disks:
   - name: n8n-data
     sizeGB: 10
